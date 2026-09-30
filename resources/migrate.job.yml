@@ -1,0 +1,11 @@
+resources:
+  jobs:
+    migrate_secrets:
+      name: Migrate secret scopes to Unity Catalog
+      tasks:
+        - task_key: migrate
+          notebook_task:
+            notebook_path: ../src/02_migrate.py
+            base_parameters:
+              dry_run: 'true'
+              delete_scopes: 'false'

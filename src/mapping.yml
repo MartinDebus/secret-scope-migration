@@ -1,0 +1,27 @@
+# The migration plan. Left of the colon is the legacy secret key, right is the
+# Unity Catalog secret name.
+#
+# Drop a key to skip it. Drop a scope block to skip the whole scope.
+
+target_catalog: workspace
+
+scopes:
+  prod-jdbc:
+    schema: prod_credentials
+    keys:
+      username: username
+      password: password
+      jdbc.url: jdbc_url          # dots are illegal in UC names
+
+  analytics-api:
+    schema: prod_credentials
+    keys:
+      api-key: api_key            # hyphens are legal, but need backticks in GRANT
+      api_secret: api_secret
+
+  legacy_etl:
+    schema: etl_credentials
+    delete_scope: true            # delete this scope once every key above is verified
+    keys:
+      sftp_user: sftp_user
+      SFTP_Password: sftp_password

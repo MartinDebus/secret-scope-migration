@@ -1,0 +1,10 @@
+bundle:
+  name: secret-scope-migration
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    default: true
+    mode: development

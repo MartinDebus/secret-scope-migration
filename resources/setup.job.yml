@@ -1,0 +1,10 @@
+resources:
+  jobs:
+    setup:
+      name: Set up secret scopes and UC schemas
+      tasks:
+        - task_key: setup
+          notebook_task:
+            notebook_path: ../src/01_setup.py
+            base_parameters:
+              seed_demo: 'true'

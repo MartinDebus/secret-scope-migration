@@ -1,0 +1,18 @@
+# Databricks CLI bundle state, sync snapshots and provider cache.
+# The CLI drops its own `.databricks/.gitignore` containing `*`, but keep this
+# here so the repo is safe even if that file goes missing.
+.databricks/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
