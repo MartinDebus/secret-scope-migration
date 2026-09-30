@@ -43,93 +43,22 @@ the migration gets reviewed in a pull request like any other change.
 ## You need a workspace
 
 Sign up at the [Free Edition signup page](https://login.databricks.com/?intent=CE_SIGN_UP)
-and Databricks provisions one for you. Copy its URL from the browser — it looks
-like `https://dbc-xxxxxxxx-xxxx.cloud.databricks.com`.
+and Databricks provisions one for you.
 
 Free Edition is serverless-only and capped at 5 concurrent job tasks, which is
 plenty here. Its default catalog is `workspace`, which is what `mapping.yml`
-already targets.
+already targets — change it if you are running this anywhere else.
 
-From there, two ways to run this. They do the same thing — pick one.
+## Run it
 
----
-
-## Option A — the CLI
-
-Install the CLI — pick your platform:
-
-```bash
-brew tap databricks/tap && brew install databricks                                  # macOS
-curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh   # macOS / Linux
-winget install Databricks.DatabricksCLI                                             # Windows
-```
-
-Then authenticate. This opens a browser for OAuth and writes the profile to
-`~/.databrickscfg`:
-
-```bash
-databricks auth login --host https://dbc-xxxxxxxx-xxxx.cloud.databricks.com --profile free-edition
-databricks current-user me --profile free-edition
-```
-
-Nothing pins a workspace URL in `databricks.yml`, so the profile alone decides
-where the bundle lands.
-
-Deploy, then create the scopes and schemas:
-
-```bash
-databricks bundle deploy -t dev --profile free-edition
-databricks bundle run setup -t dev --profile free-edition
-```
-
-One catch: `01_setup` prints a starting `mapping.yml` to cell output, and notebook
-stdout is **not** retrievable through the jobs API — from the CLI you only ever
-see `SUCCESS`. Either open `src/01_setup` in the workspace to read it, or list the
-scopes and write `mapping.yml` yourself:
-
-```bash
-databricks secrets list-scopes --profile free-edition
-databricks secrets list-secrets <scope> --profile free-edition
-```
-
-Edit `src/mapping.yml`, redeploy so the change is synced, then dry-run:
-
-```bash
-databricks bundle run migrate_secrets -t dev --profile free-edition
-```
-
-When the plan looks right:
-
-```bash
-databricks bundle run migrate_secrets -t dev --profile free-edition --notebook-params dry_run=false
-```
-
-And to delete the scopes marked `delete_scope: true` once their secrets are
-verified:
-
-```bash
-databricks bundle run migrate_secrets -t dev --profile free-edition --notebook-params dry_run=false,delete_scopes=true
-```
-
-Verify independently of the notebook's own check:
-
-```bash
-databricks api get "/api/2.1/unity-catalog/secrets?catalog_name=workspace&schema_name=prod_credentials" --profile free-edition
-```
-
----
-
-## Option B — the workspace UI (nothing to install)
-
-A browser and nothing else: no CLI, no bundle, no local checkout, no platform
-caveats.
+A browser and nothing else — no CLI, no local checkout, nothing to install.
 
 **1. Get the code in.** In the sidebar: **Workspace → Create → Git folder**, paste
 this repo's URL. Everything lands in one place, `mapping.yml` included, and the
 workspace file editor can edit it.
 
 **2. Run the setup.** Open `src/01_setup`, attach serverless, **Run all**. It
-creates the scopes and schemas, and the last cell prints a starting
+creates the demo scopes and the UC schemas, and the last cell prints a starting
 `mapping.yml`. Migrating real scopes instead? Set the `seed_demo` widget to
 `false` and only the inventory runs.
 
@@ -139,15 +68,15 @@ to skip the scope, add `delete_scope: true` where you want cleanup.
 
 **4. Migrate.** Open `src/02_migrate` and **Run all**. It starts with `dry_run`
 set to `true`, so the first pass only prints what it would do. Flip the widget to
-`false` and run again.
+`false` and run again. Once the secrets are verified, set `delete_scopes` to
+`true` to remove the scopes you marked.
 
 **5. Check the result.** **Catalog → workspace → prod_credentials → Secrets**
 lists what landed. Unity Catalog secrets don't show up in global search, so
 browse to the schema rather than searching for them.
 
 To put it on a schedule, open `02_migrate` and use **Schedule → Add schedule**,
-which creates a job around the notebook — the same thing the bundle in Option A
-defines declaratively.
+which wraps the notebook in a job.
 
 ## Four things that bite
 
@@ -168,8 +97,9 @@ warehouses or in init scripts at all — if a scope feeds an init script, it can
 move.
 
 **Scope ACLs don't map to UC privileges.** The two models are different, and
-auto-translating silently over-grants. Check `databricks secrets list-acls <scope>`
-and write the `GRANT`s yourself.
+auto-translating silently over-grants, so this migration doesn't try. Read the
+old ACLs off the Secrets API (`GET /api/2.0/secrets/acls/list`) and write the
+`GRANT`s yourself.
 
 ## Files
 
@@ -177,7 +107,8 @@ and write the `GRANT`s yourself.
 src/01_setup.py     legacy scopes + UC schemas, then prints a starting mapping.yml
 src/mapping.yml     the plan
 src/02_migrate.py   copy, verify, optionally delete scopes
-resources/          the migration job
+databricks.yml      \ bundle definition, if you would rather deploy the two
+resources/          / notebooks as jobs with the Databricks CLI
 ```
 
 Quotas: 100 secrets per schema, 1,000 per metastore, 61,440 characters per value.

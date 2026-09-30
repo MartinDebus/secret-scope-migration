@@ -1,7 +1,17 @@
 resources:
   jobs:
     setup:
-      name: Set up secret scopes and UC schemas
+      # Shared "Secret scope migration ·" prefix keeps both jobs together in the
+      # workspace jobs list instead of scattered among everything else.
+      name: Secret scope migration · 1 · Setup (OPTIONAL — creates test data)
+      description: >-
+        OPTIONAL. Creates demo secret scopes with deliberately messy key names
+        plus the Unity Catalog schemas to migrate into, then prints a starting
+        mapping.yml. This job exists to give the migration something to chew on —
+        skip it entirely if you are migrating real scopes, or set seed_demo=false
+        to run only the inventory.
+      tags:
+        project: secret_scope_migration
       tasks:
         - task_key: setup
           notebook_task:

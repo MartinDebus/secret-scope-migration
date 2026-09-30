@@ -1,7 +1,14 @@
 resources:
   jobs:
     migrate_secrets:
-      name: Migrate secret scopes to Unity Catalog
+      name: Secret scope migration · 2 · Migrate to Unity Catalog
+      description: >-
+        Reads src/mapping.yml, copies each listed secret into Unity Catalog and
+        verifies it by digest. Defaults to dry_run=true; override the notebook
+        parameters to write, and again to delete the scopes marked
+        delete_scope: true.
+      tags:
+        project: secret_scope_migration
       tasks:
         - task_key: migrate
           notebook_task:
