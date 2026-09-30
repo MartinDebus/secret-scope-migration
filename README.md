@@ -117,4 +117,4 @@ Verification compares SHA-256 digests rather than values, so nothing sensitive
 lands in cell output. A scope is deleted only when every key currently in it is
 confirmed present in Unity Catalog.
 
-Docs: [Secrets in Unity Catalog](https://docs.databricks.com/aws/en/security/secrets/unity-catalog-secrets)
+Docs: [Secrets in Unity Catalog](https://learn.microsoft.com/en-us/azure/databricks/security/secrets/unity-catalog-secrets)
